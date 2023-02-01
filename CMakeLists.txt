@@ -14,24 +14,38 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")  # threads support
 add_subdirectory(src/enet)  # Enet
 target_compile_options(enet PRIVATE -w)
 
-# Building
-file(GLOB TARGET_HPP "src/*.hpp")
-file(GLOB TARGET_CPP "src/*.cpp")
-set(TARGET_SRC ${TARGET_HPP} ${TARGET_CPP})
-
-add_executable(test_enet ${TARGET_SRC})
-
-target_include_directories(test_enet PRIVATE
+# Building the server
+add_executable(server
+  src/server.cpp
+)
+target_include_directories(server PRIVATE
   ${PROJECT_SOURCE_DIR}
   src/enet/include
 )
-
-target_link_libraries(test_enet
+target_link_libraries(server
   enet
 )
+target_compile_options(server PRIVATE
+  -Wall -Wextra -pedantic
+  "$<$<CONFIG:DEBUG>:-pg>"
+  "$<$<CONFIG:RELEASE>:-O3>"
+)
 
-# Compile options
-target_compile_options(test_enet PRIVATE
+file(GLOB TESTTEST "src/*.cpp")
+message(${TESTTEST})
+
+# Building the client
+add_executable(client
+  src/client.cpp
+)
+target_include_directories(client PRIVATE
+  ${PROJECT_SOURCE_DIR}
+  src/enet/include
+)
+target_link_libraries(client
+  enet
+)
+target_compile_options(client PRIVATE
   -Wall -Wextra -pedantic
   "$<$<CONFIG:DEBUG>:-pg>"
   "$<$<CONFIG:RELEASE>:-O3>"
