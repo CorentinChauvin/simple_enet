@@ -55,7 +55,7 @@ void handle_events(ENetHost *host)
 
 int main()
 {
-  // Initialise Enet
+  // Initialise ENet
   if (enet_initialize () != 0)
   {
     fprintf (stderr, "An error occurred while initializing ENet.\n");

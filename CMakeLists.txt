@@ -16,7 +16,8 @@ target_compile_options(enet PRIVATE -w)
 
 # Building the server
 add_executable(server
-  src/server.cpp
+  src/net_server.cpp
+  src/net_base.cpp
 )
 target_include_directories(server PRIVATE
   ${PROJECT_SOURCE_DIR}
@@ -36,7 +37,8 @@ message(${TESTTEST})
 
 # Building the client
 add_executable(client
-  src/client.cpp
+  src/net_client.cpp
+  src/net_base.cpp
 )
 target_include_directories(client PRIVATE
   ${PROJECT_SOURCE_DIR}

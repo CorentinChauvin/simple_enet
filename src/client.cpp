@@ -58,7 +58,7 @@ int main()
 {
   cout << "Hellou :)" << endl;
 
-  // Initialise Enet
+  // Initialise ENet
   if (enet_initialize () != 0)
   {
     fprintf (stderr, "An error occurred while initializing ENet.\n");
