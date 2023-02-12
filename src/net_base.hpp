@@ -9,6 +9,7 @@
 #ifndef NET_BASE_HPP
 #define NET_BASE_HPP
 
+#include "packet.hpp"
 #include "enet/enet.h"
 #include <memory>
 
@@ -16,7 +17,7 @@
 namespace net
 {
 
-/// Convenience class handling a host,
+/// Convenience class handling a host
 class NetHost
 {
   public:
@@ -57,6 +58,7 @@ class NetHost
     ENetHost* host_;        ///< Reference to the ENet host object
 };
 
+
 /// Base networking class using ENet library
 class NetBase
 {
@@ -67,10 +69,19 @@ class NetBase
     virtual bool init();
 
     /// Handles events
-    void handle_events();
+    virtual void handle_events();
 
     /// Returns a pointer to the ENet host
     ENetHost* get_host();
+
+    /**
+     * \brief  Sends a packet to a peer
+     *
+     * \param peer        Peer who should be sent the packet
+     * \param packet      Message to send
+     * \param channel_id  ENet channel on which to send
+     */
+    void send_packet(ENetPeer *peer, const Packet &packet, int channel_id);
 
   protected:
     NetHost host_;  ///< Host managing connections

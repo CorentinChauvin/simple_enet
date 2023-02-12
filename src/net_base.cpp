@@ -7,7 +7,10 @@
  */
 
 #include "net_base.hpp"
+#include "packet.hpp"
 #include "enet/enet.h"
+
+#include <cstring>
 
 #include <iostream>
 using std::cout;
@@ -132,6 +135,16 @@ void NetBase::handle_events()
 ENetHost* NetBase::get_host()
 {
   return host_.get();
+}
+
+
+void NetBase::send_packet(ENetPeer *peer, const Packet &packet, int channel_id)
+{
+  const char *data = packet.get();
+  ENetPacket *enet_packet = enet_packet_create(
+    data, strlen(data) + 1, ENET_PACKET_FLAG_RELIABLE
+  );
+  enet_peer_send(peer, channel_id, enet_packet);
 }
 
 

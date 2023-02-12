@@ -7,18 +7,28 @@
  */
 
 #include "net_client.hpp"
+#include "net_base.hpp"
+#include "packet.hpp"
 #include "enet/enet.h"
-#include <memory>
-#include <cstring>
+#include <string>
 
 #include <chrono>
 #include <thread>
 
+#include <cstring>
 #include <stdio.h>
 
 
 namespace net
 {
+
+NetClient::NetClient():
+  status_(NetClient::Status::DISCONNECTED),
+  peer_(nullptr)
+{
+
+}
+
 
 bool NetClient::init()
 {
@@ -42,8 +52,55 @@ bool NetClient::init()
 }
 
 
+bool NetClient::connect(const std::string &host, int port, float timeout)
+{
+  ENetAddress address;
+  enet_address_set_host(&address, host.c_str());
+  address.port = port;
+
+  // Initiate the connection, allocating the two channels 0 and 1.
+  peer_ = enet_host_connect(get_host(), &address, 2, 0);
+
+  if (peer_ == nullptr)
+    return false;
+
+  timeout_ = timeout;
+  connection_start_time_ = std::chrono::steady_clock::now();
+  status_ = Status::CONNECTING;
+
+  return true;
+}
+
+
+void NetClient::handle_events()
+{
+  if (status_ == Status::CONNECTING) {
+    auto t = std::chrono::steady_clock::now();
+    std::chrono::duration<double> duration = t - connection_start_time_;
+
+    if (duration.count() > timeout_) {
+      enet_peer_reset(peer_);
+      status_ = Status::DISCONNECTED;
+
+      printf("Connection to localhost:1234 failed.\n");
+    }
+  }
+
+  NetBase::handle_events();
+}
+
+
+void NetClient::send_packet(const Packet &packet, int channel_id)
+{
+  if (status_ == Status::CONNECTED)
+    NetBase::send_packet(peer_, packet, channel_id);
+}
+
+
 void NetClient::connect_cb(ENetEvent &event)
 {
+  status_ = Status::CONNECTED;
+
   printf(
     "A new client connected from %x:%u.\n",
     event.peer->address.host,
@@ -52,11 +109,16 @@ void NetClient::connect_cb(ENetEvent &event)
 
   /* Store any relevant client information here. */
   event.peer->data = (char*)"Client information";
+
+  // TODO: remove
+  send_packet(net::Packet("Hellou :)"), 0);
 }
 
 
 void NetClient::disconnect_cb(ENetEvent &event)
 {
+  status_ = Status::DISCONNECTED;
+
   printf("%s disconnected.\n", (char*)event.peer->data);
 }
 
@@ -87,49 +149,8 @@ int main()
 {
   net::NetClient client;
   client.init();
+  client.connect("localhost", 1234, 3.0);
 
-  // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  ENetAddress address;
-  ENetEvent event;
-  ENetPeer *peer;
-
-  enet_address_set_host (& address, "localhost");
-  address.port = 1234;
-  /* Initiate the connection, allocating the two channels 0 and 1. */
-  peer = enet_host_connect(client.get_host(), & address, 2, 0);
-  if (peer == NULL)
-  {
-    fprintf (stderr,
-              "No available peers for initiating an ENet connection.\n");
-    exit (EXIT_FAILURE);
-  }
-  /* Wait up to 5 seconds for the connection attempt to succeed. */
-  if (enet_host_service (client.get_host(), & event, 5000) > 0 &&
-    event.type == ENET_EVENT_TYPE_CONNECT)
-  {
-    puts ("Connection to localhost:1234 succeeded.");
-  }
-  else
-  {
-    /* Either the 5 seconds are up or a disconnect event was */
-    /* received. Reset the peer in the event the 5 seconds   */
-    /* had run out without any significant event.            */
-    enet_peer_reset (peer);
-    puts ("Connection to slocalhost:1234 failed.");
-  }
-
-  /* Create a reliable packet of size 7 containing "packet\0" */
-  ENetPacket * packet = enet_packet_create ("packet",
-                                            strlen ("packet") + 1,
-                                            ENET_PACKET_FLAG_RELIABLE);
-  /* Extend the packet so and append the string "foo", so it now */
-  /* contains "packetfoo\0"                                      */
-  enet_packet_resize (packet, strlen ("packetfoo") + 1);
-  strcpy ((char*)(&packet -> data[strlen ("packet")]), "foo");
-  /* Send the packet to the peer over channel id 0. */
-  /* One could also broadcast the packet by         */
-  /* enet_host_broadcast (host, 0, packet);         */
-  enet_peer_send(peer, 0, packet);
   // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   while (true) {

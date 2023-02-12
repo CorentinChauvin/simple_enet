@@ -14,11 +14,54 @@
 #include <thread>
 
 #include <stdio.h>
+#include <cstring>
+#include <string>
 
 
 namespace net
 {
 
+// =============================================================================
+// ServerPeers
+//
+void ServerPeers::add_peer(ENetPeer *peer, ServerPeers::Peer::Status new_status)
+{
+  if (get_peer(peer) == nullptr) {
+    Peer new_peer = {
+      .peer = peer,
+      .status = new_status
+    };
+
+    peers_.push_back(new_peer);
+  }
+}
+
+
+ServerPeers::Peer* ServerPeers::get_peer(ENetPeer *peer)
+{
+  for (Peer& handled_peer: peers_) {
+    if (handled_peer.peer == peer)
+      return &handled_peer;
+  }
+
+  return nullptr;
+}
+
+
+void ServerPeers::remove_peer(ENetPeer *peer)
+{
+  for (unsigned int k = 0; k < peers_.size(); k++) {
+    if (peers_[k].peer == peer) {
+      peers_.erase(peers_.begin() + k);
+      break;
+    }
+  }
+}
+
+
+// =============================================================================
+// NetServer
+//
 bool NetServer::init()
 {
   if (!NetBase::init())
@@ -52,10 +95,20 @@ bool NetServer::init()
 void NetServer::connect_cb(ENetEvent &event)
 {
   printf(
-    "A new client connected from %x:%u.\n",
+    "Client attempting to connect %x:%u.\n",
     event.peer->address.host,
     (unsigned int)event.peer->address.port
   );
+
+  // Validate the client
+  // TODO: send validation puzzle
+  // TODO: solve validation puzzle
+  // TODO: wait for client's answer
+  // TODO: compare client's answer
+  peers_.add_peer(event.peer, ServerPeers::Peer::Status::VALIDATING);
+
+
+
 
   /* Store any relevant client information here. */
   event.peer->data = (char*)"Client information";
@@ -77,6 +130,16 @@ void NetServer::receive_cb(ENetEvent &event)
     (char*)event.peer->data,
     (unsigned int)event.channelID
   );
+
+  // TODO: handle validation answer message
+  // TODO: discard messages if not validated
+  bool validated = true;
+
+  if (!validated) {
+    enet_peer_disconnect(event.peer, 0/*TODO*/);
+  }
+
+  send_packet(event.peer, Packet("I received your packet"), 0);
 }
 
 
@@ -86,10 +149,13 @@ void NetServer::no_event_cb()
 }
 
 
-
 }  // namespace enet
 
 
+
+// =============================================================================
+// Main
+//
 int main()
 {
   net::NetServer server;

@@ -11,19 +11,61 @@
 
 #include "net_base.hpp"
 #include "enet/enet.h"
+#include <string>
+#include <chrono>
 
 
 namespace net
 {
 
-/// Base class for all network servers
+/**
+ * \brief  Base class for all network clients
+ *
+ * Can handle a connection to a single remote peer
+ */
 class NetClient: public NetBase
 {
   public:
+    NetClient();
+
     /// Initialises networking and the connection, returns whether it was successful
     bool init() override;
 
+    /**
+     * \brief  Initiates connection to a given host
+     *
+     * \param host  Hostname or IP address of the host to connect to
+     * \param port  Destination port
+     * \param timeout  Duration before timing out the connection attempt (in s)
+     * \return  Whether the connection could be initiated, or failed
+     */
+    bool connect(const std::string &host, int port, float timeout);
+
+    /// Handles events
+    void handle_events() override;
+
+    /**
+     * \brief  Sends a packet to the connected peer
+     *
+     * \param packet      Message to send
+     * \param channel_id  ENet channel on which to send
+     */
+    void send_packet(const Packet &packet, int channel_id);
+
   private:
+    /// Connection status
+    enum class Status
+    {
+      DISCONNECTED,  ///< Not connection to any peer
+      CONNECTING,    ///< Attempting to connect a peer
+      CONNECTED      ///< Connected to a peer
+    };
+
+    Status status_;  ///< Connection status
+    float timeout_;  ///< Duration before timing out the connection attempt (in s)
+    std::chrono::steady_clock::time_point connection_start_time_;  ///< When the connection was initiated
+    ENetPeer *peer_;   ///< Connected peer
+
     /// Called when a connection has been established
     void connect_cb(ENetEvent &event) override;
 
