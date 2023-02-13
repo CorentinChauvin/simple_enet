@@ -6,7 +6,7 @@
  * \date   2023
  */
 
-#include "net_server.hpp"
+#include "server.hpp"
 #include "enet/enet.h"
 #include <memory>
 
@@ -62,6 +62,14 @@ void ServerPeers::remove_peer(ENetPeer *peer)
 // =============================================================================
 // NetServer
 //
+NetServer::NetServer(int port):
+  NetBase(),
+  port_(port)
+{
+
+}
+
+
 bool NetServer::init()
 {
   if (!NetBase::init())
@@ -69,11 +77,8 @@ bool NetServer::init()
 
 
   ENetAddress address;
-  // Bind the server to the default localhost.
-  // A specific host address can be specified by
-  // enet_address_set_host (& address, "x.x.x.x");
   address.host = ENET_HOST_ANY;
-  address.port = 1234;  // Bind the server to port 1234.
+  address.port = port_;
 
   bool success = host_.create(
     &address,  // the address to bind the server host to
@@ -107,10 +112,7 @@ void NetServer::connect_cb(ENetEvent &event)
   // TODO: compare client's answer
   peers_.add_peer(event.peer, ServerPeers::Peer::Status::VALIDATING);
 
-
-
-
-  /* Store any relevant client information here. */
+  // TODO: store any relevant client information here.
   event.peer->data = (char*)"Client information";
 }
 
@@ -158,7 +160,7 @@ void NetServer::no_event_cb()
 //
 int main()
 {
-  net::NetServer server;
+  net::NetServer server(1234);
   server.init();
 
   while (true) {

@@ -6,10 +6,10 @@
  * \date   2023
  */
 
-#ifndef NET_SERVER_HPP
-#define NET_SERVER_HPP
+#ifndef NET__SERVER_HPP
+#define NET__SERVER_HPP
 
-#include "net_base.hpp"
+#include "base.hpp"
 #include "enet/enet.h"
 #include <vector>
 
@@ -53,11 +53,14 @@ class ServerPeers
 class NetServer: public NetBase
 {
   public:
+    NetServer(int port);
+
     /// Initialises networking and the connection, returns whether it was successful
     bool init() override;
 
   private:
     ServerPeers peers_;  ///< Reference to all peers currently handled
+    int port_;  ///< Port used by the clients to connect to the server
 
     /// Called when a connection has been established
     void connect_cb(ENetEvent &event) override;

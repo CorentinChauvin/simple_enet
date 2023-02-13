@@ -16,9 +16,9 @@ target_compile_options(enet PRIVATE -w)
 
 # Building the server
 add_executable(server
-  src/net_server.cpp
-  src/net_base.cpp
-  src/packet.cpp
+  src/net/server.cpp
+  src/net/base.cpp
+  src/net/packet.cpp
 )
 target_include_directories(server PRIVATE
   ${PROJECT_SOURCE_DIR}
@@ -33,14 +33,11 @@ target_compile_options(server PRIVATE
   "$<$<CONFIG:RELEASE>:-O3>"
 )
 
-file(GLOB TESTTEST "src/*.cpp")
-message(${TESTTEST})
-
 # Building the client
 add_executable(client
-  src/net_client.cpp
-  src/net_base.cpp
-  src/packet.cpp
+  src/net/client.cpp
+  src/net/base.cpp
+  src/net/packet.cpp
 )
 target_include_directories(client PRIVATE
   ${PROJECT_SOURCE_DIR}

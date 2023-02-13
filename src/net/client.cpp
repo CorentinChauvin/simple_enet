@@ -6,8 +6,8 @@
  * \date   2023
  */
 
-#include "net_client.hpp"
-#include "net_base.hpp"
+#include "client.hpp"
+#include "base.hpp"
 #include "packet.hpp"
 #include "enet/enet.h"
 #include <string>
@@ -23,6 +23,7 @@ namespace net
 {
 
 NetClient::NetClient():
+  NetBase(),
   status_(NetClient::Status::DISCONNECTED),
   peer_(nullptr)
 {
@@ -150,8 +151,6 @@ int main()
   net::NetClient client;
   client.init();
   client.connect("localhost", 1234, 3.0);
-
-  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   while (true) {
     client.handle_events();

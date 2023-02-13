@@ -6,7 +6,7 @@
  * \date   2023
  */
 
-#include "net_base.hpp"
+#include "base.hpp"
 #include "packet.hpp"
 #include "enet/enet.h"
 

@@ -6,10 +6,10 @@
  * \date   2023
  */
 
-#ifndef NET_CLIENT_HPP
-#define NET_CLIENT_HPP
+#ifndef NET__CLIENT_HPP
+#define NET__CLIENT_HPP
 
-#include "net_base.hpp"
+#include "base.hpp"
 #include "enet/enet.h"
 #include <string>
 #include <chrono>

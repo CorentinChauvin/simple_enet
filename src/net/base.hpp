@@ -6,8 +6,8 @@
  * \date   2023
  */
 
-#ifndef NET_BASE_HPP
-#define NET_BASE_HPP
+#ifndef NET__BASE_HPP
+#define NET__BASE_HPP
 
 #include "packet.hpp"
 #include "enet/enet.h"

@@ -6,8 +6,8 @@
  * \date   2023
  */
 
-#ifndef PACKET_HPP
-#define PACKET_HPP
+#ifndef NET__PACKET_HPP
+#define NET__PACKET_HPP
 
 #include <string>
 
