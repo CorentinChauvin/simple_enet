@@ -23,6 +23,7 @@ add_executable(server
 target_include_directories(server PRIVATE
   ${PROJECT_SOURCE_DIR}
   src/enet/include
+  src/cereal/include
 )
 target_link_libraries(server
   enet
@@ -42,6 +43,7 @@ add_executable(client
 target_include_directories(client PRIVATE
   ${PROJECT_SOURCE_DIR}
   src/enet/include
+  src/cereal/include
 )
 target_link_libraries(client
   enet
