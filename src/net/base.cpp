@@ -140,9 +140,9 @@ ENetHost* NetBase::get_host()
 
 void NetBase::send_packet(ENetPeer *peer, const Packet &packet, int channel_id)
 {
-  const char *data = packet.get();
+  std::string data = packet.serialise();
   ENetPacket *enet_packet = enet_packet_create(
-    data, strlen(data) + 1, ENET_PACKET_FLAG_RELIABLE
+    data.c_str(), data.size() + 1, ENET_PACKET_FLAG_RELIABLE
   );
   enet_peer_send(peer, channel_id, enet_packet);
 }

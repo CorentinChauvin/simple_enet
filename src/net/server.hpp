@@ -12,6 +12,7 @@
 #include "base.hpp"
 #include "enet/enet.h"
 #include <vector>
+#include <string>
 
 
 namespace net
@@ -33,6 +34,7 @@ class ServerPeers
 
       ENetPeer *peer;  ///< Signature of the client
       Status status;   ///< Status of the connection
+      std::string validation_str;  ///< String used for peer validation
     };
 
     /// Adds a peer to the list of handled peers and sets its status
@@ -43,6 +45,9 @@ class ServerPeers
 
     /// Removes a peer from the list of handled peers
     void remove_peer(ENetPeer *peer);
+
+    /// Generates a random string used for validation of the peer
+    std::string generate_validation_str(ENetPeer *peer);
 
   private:
     std::vector<Peer> peers_;  ///< Reference to all peers currently handled

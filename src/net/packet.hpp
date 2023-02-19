@@ -19,17 +19,47 @@ namespace net
 class Packet
 {
   public:
-    Packet(const std::string &data);
+    /// Type of the packet
+    enum class Type: uint8_t
+    {
+      DATA,               ///< Generic data packet
+      VALIDATION_STR,     ///< String sent by the server to a newly connected peer for validation
+      VALIDATIION_ANSWER  ///< Validation answer of a newly connected peer to the server for validation
+    };
 
-    /// Returns the raw data contained in the packet
-    const char* get() const;
+    /**
+     * \param type  Description of the packet
+     * \param data  Data contained in the packet
+     */
+    Packet(Type type, const std::string &data);
+
+    /**
+     * \param raw_data  Serialised data of the packet
+     */
+    Packet(const std::string &raw_data);
+
+    /**
+     * \param raw_data  Serialised data of the packet
+     * \param length    Length of the data
+     */
+    Packet(const char *raw_data, int length);
+
+    /// Get the raw serialised data of the packet
+    std::string serialise() const;
+
+    /// Returns the data contained in the packet
+    std::string get_data() const;
+
+    /// Returns the packet type
+    Type get_type() const;
 
     /// Appends some data to the packet
     // TODO
     void append(const std::string &new_data) = delete;
 
   private:
-    std::string data_;  ///< Raw data contained in the packet
+    Type type_;         ///< Description of the packet
+    std::string data_;  ///< Data contained in the packet
 };
 
 }  // namespace net

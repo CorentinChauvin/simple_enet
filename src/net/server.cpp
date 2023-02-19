@@ -29,7 +29,8 @@ void ServerPeers::add_peer(ENetPeer *peer, ServerPeers::Peer::Status new_status)
   if (get_peer(peer) == nullptr) {
     Peer new_peer = {
       .peer = peer,
-      .status = new_status
+      .status = new_status,
+      .validation_str = ""
     };
 
     peers_.push_back(new_peer);
@@ -59,6 +60,15 @@ void ServerPeers::remove_peer(ENetPeer *peer)
 }
 
 
+std::string ServerPeers::generate_validation_str(ENetPeer *peer)
+{
+  Peer* handled_peer = get_peer(peer);
+  handled_peer->validation_str = "Hellou :)";  // TODO
+
+  return handled_peer->validation_str;
+}
+
+
 // =============================================================================
 // NetServer
 //
@@ -75,7 +85,6 @@ bool NetServer::init()
   if (!NetBase::init())
     return false;
 
-
   ENetAddress address;
   address.host = ENET_HOST_ANY;
   address.port = port_;
@@ -89,7 +98,7 @@ bool NetServer::init()
   );
 
   if (!success) {
-    fprintf(stderr, "An error occurred while trying to create an ENet server host.\n");
+    printf("An error occurred while trying to create an ENet server host.\n");
     return false;
   }
 
@@ -111,6 +120,7 @@ void NetServer::connect_cb(ENetEvent &event)
   // TODO: wait for client's answer
   // TODO: compare client's answer
   peers_.add_peer(event.peer, ServerPeers::Peer::Status::VALIDATING);
+  std::string validation_str = peers_.generate_validation_str(event.peer);
 
   // TODO: store any relevant client information here.
   event.peer->data = (char*)"Client information";
@@ -125,10 +135,12 @@ void NetServer::disconnect_cb(ENetEvent &event)
 
 void NetServer::receive_cb(ENetEvent &event)
 {
+  Packet packet((char*)event.packet->data, event.packet->dataLength);
+
   printf(
     "A packet of length %u containing %s was received from %s on channel %u.\n",
     (unsigned int)event.packet->dataLength,
-    (char*)event.packet->data,
+    (char*)packet.get_data().c_str(),
     (char*)event.peer->data,
     (unsigned int)event.channelID
   );
@@ -141,7 +153,7 @@ void NetServer::receive_cb(ENetEvent &event)
     enet_peer_disconnect(event.peer, 0/*TODO*/);
   }
 
-  send_packet(event.peer, Packet("I received your packet"), 0);
+  send_packet(event.peer, Packet(Packet::Type::DATA, "I received your packet"), 0);
 }
 
 
