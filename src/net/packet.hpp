@@ -27,6 +27,8 @@ class Packet
       VALIDATIION_ANSWER  ///< Validation answer of a newly connected peer to the server for validation
     };
 
+    Packet();
+
     /**
      * \param type  Description of the packet
      * \param data  Data contained in the packet
@@ -34,15 +36,19 @@ class Packet
     Packet(Type type, const std::string &data);
 
     /**
+     * \brief  Loads serialised data in the packet
+     *
      * \param raw_data  Serialised data of the packet
      */
-    Packet(const std::string &raw_data);
+    void load_serialised(const std::string &raw_data);
 
     /**
+     * \brief  Loads serialised data in the packet
+     *
      * \param raw_data  Serialised data of the packet
      * \param length    Length of the data
      */
-    Packet(const char *raw_data, int length);
+    void load_serialised(const char *raw_data, int length);
 
     /// Get the raw serialised data of the packet
     std::string serialise() const;

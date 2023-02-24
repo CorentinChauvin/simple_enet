@@ -12,6 +12,7 @@
 #include "packet.hpp"
 #include "enet/enet.h"
 #include <memory>
+#include <string>
 
 
 namespace net
@@ -97,6 +98,9 @@ class NetBase
 
     /// Called when no event has occured within the time limit
     virtual void no_event_cb() = 0;
+
+    /// Solves the puzzle used to validate a new peer
+    std::string solve_validation_puzzle(const std::string &validation_str) const;
 };
 
 

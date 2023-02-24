@@ -16,6 +16,12 @@
 namespace net
 {
 
+Packet::Packet()
+{
+
+}
+
+
 Packet::Packet(Packet::Type type, const std::string &data):
   type_(type),
   data_(data)
@@ -24,7 +30,7 @@ Packet::Packet(Packet::Type type, const std::string &data):
 }
 
 
-Packet::Packet(const std::string &raw_data)
+void Packet::load_serialised(const std::string &raw_data)
 {
   std::istringstream is(raw_data);
   uint8_t _type;
@@ -38,10 +44,9 @@ Packet::Packet(const std::string &raw_data)
 }
 
 
-Packet::Packet(const char *raw_data, int length):
-  Packet(std::string(raw_data, length))
+void Packet::load_serialised(const char *raw_data, int length)
 {
-
+  load_serialised(std::string(raw_data, length));
 }
 
 

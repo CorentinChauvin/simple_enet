@@ -9,6 +9,7 @@
 #include "base.hpp"
 #include "packet.hpp"
 #include "enet/enet.h"
+#include <string>
 
 #include <cstring>
 
@@ -145,6 +146,12 @@ void NetBase::send_packet(ENetPeer *peer, const Packet &packet, int channel_id)
     data.c_str(), data.size() + 1, ENET_PACKET_FLAG_RELIABLE
   );
   enet_peer_send(peer, channel_id, enet_packet);
+}
+
+
+std::string NetBase::solve_validation_puzzle(const std::string &validation_str) const
+{
+  return validation_str;  // TODO: hash the string in a smart way isntead
 }
 
 

@@ -63,7 +63,7 @@ void ServerPeers::remove_peer(ENetPeer *peer)
 std::string ServerPeers::generate_validation_str(ENetPeer *peer)
 {
   Peer* handled_peer = get_peer(peer);
-  handled_peer->validation_str = "Hellou :)";  // TODO
+  handled_peer->validation_str = "Super validation string seed";  // TODO
 
   return handled_peer->validation_str;
 }
@@ -120,7 +120,10 @@ void NetServer::connect_cb(ENetEvent &event)
   // TODO: wait for client's answer
   // TODO: compare client's answer
   peers_.add_peer(event.peer, ServerPeers::Peer::Status::VALIDATING);
+
   std::string validation_str = peers_.generate_validation_str(event.peer);
+  Packet packet(Packet::Type::VALIDATION_STR, validation_str);
+  send_packet(event.peer, packet, 0);
 
   // TODO: store any relevant client information here.
   event.peer->data = (char*)"Client information";
@@ -135,7 +138,8 @@ void NetServer::disconnect_cb(ENetEvent &event)
 
 void NetServer::receive_cb(ENetEvent &event)
 {
-  Packet packet((char*)event.packet->data, event.packet->dataLength);
+  Packet packet;
+  packet.load_serialised((char*)event.packet->data, event.packet->dataLength);
 
   printf(
     "A packet of length %u containing %s was received from %s on channel %u.\n",
@@ -145,14 +149,36 @@ void NetServer::receive_cb(ENetEvent &event)
     (unsigned int)event.channelID
   );
 
-  // TODO: handle validation answer message
-  // TODO: discard messages if not validated
-  bool validated = true;
+  ServerPeers::Peer* peer = peers_.get_peer(event.peer);
 
-  if (!validated) {
+  if (peer == nullptr) {
+    printf("ERROR: received message from unknown peer\n");
+    return;
+  }
+
+  // Handle validation answer from newly connected peers
+  if (packet.get_type() == Packet::Type::VALIDATIION_ANSWER) {
+    std::string expected_answer = solve_validation_puzzle(peer->validation_str);
+
+    if (packet.get_data() == peer->validation_str) {
+      peer->status = ServerPeers::Peer::Status::CONNECTED;
+      printf("Peer validated!\n");
+    } else {
+      enet_peer_disconnect(event.peer, 0/*TODO*/);
+      printf("Peer failed validation puzzle. Disconnecting\n");
+    }
+
+    return;
+  }
+
+  // Disconnect unauthorised peers
+  if (peer->status != ServerPeers::Peer::Status::CONNECTED) {
+    printf("Received message from unauthorised peer! Disconnecting\n");
     enet_peer_disconnect(event.peer, 0/*TODO*/);
   }
 
+  // Handle messages from authorised peers
+  // TODO
   send_packet(event.peer, Packet(Packet::Type::DATA, "I received your packet"), 0);
 }
 

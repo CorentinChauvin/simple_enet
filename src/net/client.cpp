@@ -110,9 +110,6 @@ void NetClient::connect_cb(ENetEvent &event)
 
   /* Store any relevant client information here. */
   event.peer->data = (char*)"Client information";
-
-  // TODO: remove
-  send_packet(net::Packet(Packet::Type::DATA, "Hellou :)"), 0);
 }
 
 
@@ -126,7 +123,8 @@ void NetClient::disconnect_cb(ENetEvent &event)
 
 void NetClient::receive_cb(ENetEvent &event)
 {
-  Packet packet((char*)event.packet->data, event.packet->dataLength);
+  Packet packet;
+  packet.load_serialised((char*)event.packet->data, event.packet->dataLength);
 
   printf(
     "A packet of length %u containing %s was received from %s on channel %u.\n",
@@ -135,6 +133,15 @@ void NetClient::receive_cb(ENetEvent &event)
     (char*)event.peer->data,
     (unsigned int)event.channelID
   );
+
+  // Solve puzzle to validate new connection
+  if (packet.get_type() == Packet::Type::VALIDATION_STR) {
+    Packet answer(
+      Packet::Type::VALIDATIION_ANSWER,
+      solve_validation_puzzle(packet.get_data())
+    );
+    send_packet(answer, 0);
+  }
 }
 
 
