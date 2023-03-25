@@ -22,8 +22,8 @@
 namespace net
 {
 
-NetClient::NetClient():
-  NetBase(),
+NetClient::NetClient(const std::string &validation_salt):
+  NetBase(validation_salt),
   status_(NetClient::Status::DISCONNECTED),
   peer_(nullptr)
 {
@@ -156,9 +156,13 @@ void NetClient::no_event_cb()
 
 int main()
 {
-  net::NetClient client;
+  const std::string validation_salt = "Blektr!";
+  const int port = 1234;
+  const float timeout = 3.0;
+
+  net::NetClient client(validation_salt);
   client.init();
-  client.connect("localhost", 1234, 3.0);
+  client.connect("localhost", port, timeout);
 
   while (true) {
     client.handle_events();

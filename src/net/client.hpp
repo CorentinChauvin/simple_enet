@@ -26,7 +26,11 @@ namespace net
 class NetClient: public NetBase
 {
   public:
-    NetClient();
+    /**
+     * \param validation_salt  Used to scramble the validation string, should be common to all peers
+     */
+    NetClient(const std::string &validation_salt);
+
 
     /// Initialises networking and the connection, returns whether it was successful
     bool init() override;
@@ -56,8 +60,8 @@ class NetClient: public NetBase
     /// Connection status
     enum class Status
     {
-      DISCONNECTED,  ///< Not connection to any peer
-      CONNECTING,    ///< Attempting to connect a peer
+      DISCONNECTED,  ///< Not connected to any peer
+      CONNECTING,    ///< Attempting to connect to a peer
       CONNECTED      ///< Connected to a peer
     };
 

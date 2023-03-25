@@ -46,8 +46,12 @@ class ServerPeers
     /// Removes a peer from the list of handled peers
     void remove_peer(ENetPeer *peer);
 
-    /// Generates a random string used for validation of the peer
-    std::string generate_validation_str(ENetPeer *peer);
+    /**
+     * \brief  Generates a random string used for validation of the peer
+     *
+     * Based on https://stackoverflow.com/a/24586587
+     */
+    std::string generate_validation_str(ENetPeer *peer, int size);
 
   private:
     std::vector<Peer> peers_;  ///< Reference to all peers currently handled
@@ -58,14 +62,20 @@ class ServerPeers
 class NetServer: public NetBase
 {
   public:
-    NetServer(int port);
+    /**
+     * \param port                 Port used by the clients to connect to the server
+     * \param validation_str_size  Length of the validation string to generate
+     * \param validation_salt      Used to scramble the validation string, should be common to all peers
+     */
+    NetServer(int port, int validation_str_size, const std::string &validation_salt);
 
     /// Initialises networking and the connection, returns whether it was successful
     bool init() override;
 
   private:
     ServerPeers peers_;  ///< Reference to all peers currently handled
-    int port_;  ///< Port used by the clients to connect to the server
+    const int port_;     ///< Port used by the clients to connect to the server
+    const int validation_str_size_;      ///< Length of the validation string to generate
 
     /// Called when a connection has been established
     void connect_cb(ENetEvent &event) override;

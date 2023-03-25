@@ -8,14 +8,14 @@
 
 #include "server.hpp"
 #include "enet/enet.h"
+#include <random>
+#include <string>
 #include <memory>
-
 #include <chrono>
 #include <thread>
 
 #include <stdio.h>
 #include <cstring>
-#include <string>
 
 
 namespace net
@@ -60,21 +60,35 @@ void ServerPeers::remove_peer(ENetPeer *peer)
 }
 
 
-std::string ServerPeers::generate_validation_str(ENetPeer *peer)
+std::string ServerPeers::generate_validation_str(ENetPeer *peer, int length)
 {
-  Peer* handled_peer = get_peer(peer);
-  handled_peer->validation_str = "Super validation string seed";  // TODO
+  static auto& chrs = "0123456789"
+        "abcdefghijklmnopqrstuvwxyz"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-  return handled_peer->validation_str;
+  thread_local static std::mt19937 rg{std::random_device{}()};
+  thread_local static std::uniform_int_distribution<int> pick(0, sizeof(chrs) - 2);
+
+  std::string validation_str;
+  validation_str.reserve(length);
+
+  while (length--)
+    validation_str += chrs[pick(rg)];
+
+  Peer* handled_peer = get_peer(peer);
+  handled_peer->validation_str = validation_str;
+
+  return validation_str;
 }
 
 
 // =============================================================================
 // NetServer
 //
-NetServer::NetServer(int port):
-  NetBase(),
-  port_(port)
+NetServer::NetServer(int port, int validation_str_size, const std::string &validation_salt):
+  NetBase(validation_salt),
+  port_(port),
+  validation_str_size_(validation_str_size)
 {
 
 }
@@ -121,7 +135,9 @@ void NetServer::connect_cb(ENetEvent &event)
   // TODO: compare client's answer
   peers_.add_peer(event.peer, ServerPeers::Peer::Status::VALIDATING);
 
-  std::string validation_str = peers_.generate_validation_str(event.peer);
+  std::string validation_str = peers_.generate_validation_str(
+    event.peer, validation_str_size_
+  );
   Packet packet(Packet::Type::VALIDATION_STR, validation_str);
   send_packet(event.peer, packet, 0);
 
@@ -160,7 +176,7 @@ void NetServer::receive_cb(ENetEvent &event)
   if (packet.get_type() == Packet::Type::VALIDATIION_ANSWER) {
     std::string expected_answer = solve_validation_puzzle(peer->validation_str);
 
-    if (packet.get_data() == peer->validation_str) {
+    if (packet.get_data() == expected_answer) {
       peer->status = ServerPeers::Peer::Status::CONNECTED;
       printf("Peer validated!\n");
     } else {
@@ -198,7 +214,11 @@ void NetServer::no_event_cb()
 //
 int main()
 {
-  net::NetServer server(1234);
+  const int port = 1234;
+  const int validation_str_size = 128;
+  const std::string validation_salt = "Blektr!";
+
+  net::NetServer server(port, validation_str_size, validation_salt);
   server.init();
 
   while (true) {

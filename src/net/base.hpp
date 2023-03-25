@@ -64,7 +64,10 @@ class NetHost
 class NetBase
 {
   public:
-    NetBase();
+    /**
+     * \param validation_salt  Used to scramble the validation string, should be common to all peers
+     */
+    NetBase(const std::string &validation_salt);
 
     /// Initialises networking and the connection, returns whether it was successful
     virtual bool init();
@@ -86,6 +89,7 @@ class NetBase
 
   protected:
     NetHost host_;  ///< Host managing connections
+    const std::string validation_salt_;  ///< Used to scramble the validation string
 
     /// Called when a connection has been established
     virtual void connect_cb(ENetEvent &event) = 0;

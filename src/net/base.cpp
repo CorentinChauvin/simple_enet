@@ -79,7 +79,8 @@ ENetHost* NetHost::get()
 // =============================================================================
 // NetBase
 //
-NetBase::NetBase()
+NetBase::NetBase(const std::string &validation_salt):
+  validation_salt_(validation_salt)
 {
 
 }
@@ -151,7 +152,22 @@ void NetBase::send_packet(ENetPeer *peer, const Packet &packet, int channel_id)
 
 std::string NetBase::solve_validation_puzzle(const std::string &validation_str) const
 {
-  return validation_str;  // TODO: hash the string in a smart way isntead
+  std::string salt = validation_salt_;
+  std::string solution;
+  auto n = validation_str.size();
+  auto m = salt.size();
+  solution.reserve(n);
+
+  std::string chrs = "0123456789"
+    "abcdefghijklmnopqrstuvwxyz"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  for (int k = 0; k < (int)n; k++) {
+    int index = (validation_str[k] << 3) ^ (validation_str[k] | salt[k % m]);
+    solution += chrs[index % (int)chrs.size()];
+  }
+
+  return solution;
 }
 
 
