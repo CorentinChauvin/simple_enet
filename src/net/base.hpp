@@ -22,8 +22,8 @@ namespace net
 class NetHost
 {
   public:
-   NetHost();
-   ~NetHost();
+    NetHost();
+    ~NetHost();
 
     /**
      * \brief  Creates a host for communicating to peers.

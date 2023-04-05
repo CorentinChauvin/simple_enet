@@ -127,11 +127,11 @@ void NetClient::receive_cb(ENetEvent &event)
   packet.load_serialised((char*)event.packet->data, event.packet->dataLength);
 
   printf(
-    "A packet of length %u containing %s was received from %s on channel %u.\n",
+    "New packet (length=%u, source=%s, channel=%u): %s\n",
     (unsigned int)event.packet->dataLength,
-    (char*)packet.get_data().c_str(),
     (char*)event.peer->data,
-    (unsigned int)event.channelID
+    (unsigned int)event.channelID,
+    (char*)packet.get_data().c_str()
   );
 
   // Solve puzzle to validate new connection

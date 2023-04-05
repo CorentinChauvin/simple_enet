@@ -49,6 +49,20 @@ ServerPeers::Peer* ServerPeers::get_peer(ENetPeer *peer)
 }
 
 
+std::vector<ENetPeer*> ServerPeers::get_connected_peers() const
+{
+  std::vector<ENetPeer*> peers;
+  peers.reserve(peers_.size());
+
+  for (auto &peer: peers_) {
+    if (peer.status == Peer::Status::CONNECTED)
+      peers.emplace_back(peer.peer);
+  }
+
+  return peers;
+}
+
+
 void ServerPeers::remove_peer(ENetPeer *peer)
 {
   for (unsigned int k = 0; k < peers_.size(); k++) {
@@ -120,6 +134,15 @@ bool NetServer::init()
 }
 
 
+void NetServer::send_packet_to_all(const Packet &packet, int channel_id)
+{
+  std::vector<ENetPeer*> connected_peers = peers_.get_connected_peers();
+
+  for (ENetPeer *peer: connected_peers)
+    send_packet(peer,  packet, channel_id);
+}
+
+
 void NetServer::connect_cb(ENetEvent &event)
 {
   printf(
@@ -129,10 +152,6 @@ void NetServer::connect_cb(ENetEvent &event)
   );
 
   // Validate the client
-  // TODO: send validation puzzle
-  // TODO: solve validation puzzle
-  // TODO: wait for client's answer
-  // TODO: compare client's answer
   peers_.add_peer(event.peer, ServerPeers::Peer::Status::VALIDATING);
 
   std::string validation_str = peers_.generate_validation_str(
@@ -158,11 +177,11 @@ void NetServer::receive_cb(ENetEvent &event)
   packet.load_serialised((char*)event.packet->data, event.packet->dataLength);
 
   printf(
-    "A packet of length %u containing %s was received from %s on channel %u.\n",
+    "New packet (length=%u, source=%s, channel=%u): %s\n",
     (unsigned int)event.packet->dataLength,
-    (char*)packet.get_data().c_str(),
     (char*)event.peer->data,
-    (unsigned int)event.channelID
+    (unsigned int)event.channelID,
+    (char*)packet.get_data().c_str()
   );
 
   ServerPeers::Peer* peer = peers_.get_peer(event.peer);
@@ -179,6 +198,11 @@ void NetServer::receive_cb(ENetEvent &event)
     if (packet.get_data() == expected_answer) {
       peer->status = ServerPeers::Peer::Status::CONNECTED;
       printf("Peer validated!\n");
+
+      send_packet_to_all(
+        Packet(Packet::Type::DATA, "A new peer has successfully connected"),
+        0
+      );
     } else {
       enet_peer_disconnect(event.peer, 0/*TODO*/);
       printf("Peer failed validation puzzle. Disconnecting\n");

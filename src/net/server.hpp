@@ -43,6 +43,9 @@ class ServerPeers
     /// Returns a reference to the handled peer (nullptr if not found)
     Peer* get_peer(ENetPeer *peer);
 
+    /// Returns a reference to all connected peers
+    std::vector<ENetPeer*> get_connected_peers() const;
+
     /// Removes a peer from the list of handled peers
     void remove_peer(ENetPeer *peer);
 
@@ -71,6 +74,14 @@ class NetServer: public NetBase
 
     /// Initialises networking and the connection, returns whether it was successful
     bool init() override;
+
+    /**
+     * \brief  Sends a packet to all connected peers
+     *
+     * \param packet      Message to send
+     * \param channel_id  ENet channel on which to send
+     */
+    void send_packet_to_all(const Packet &packet, int channel_id);
 
   private:
     ServerPeers peers_;  ///< Reference to all peers currently handled
